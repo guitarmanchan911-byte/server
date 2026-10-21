@@ -123,7 +123,7 @@ class Quota extends Wrapper {
 
 	#[\Override]
 	public function fopen(string $path, string $mode) {
-		if (!$this->hasQuota() || $this->isPartFile($path)) {
+		if (!$this->hasQuota() || $this->isPartFile($path) || $mode === 'r' || $mode === 'rb') {
 			return $this->getWrapperStorage()->fopen($path, $mode);
 		}
 
@@ -134,7 +134,7 @@ class Quota extends Wrapper {
 		}
 
 		$source = $this->getWrapperStorage()->fopen($path, $mode);
-		if ($source && (is_int($free) || is_float($free)) && $free >= 0 && $mode !== 'r' && $mode !== 'rb') {
+		if ($source && (is_int($free) || is_float($free)) && $free >= 0) {
 			// only apply quota for files, not metadata, trash or others
 			if ($this->shouldApplyQuota($path)) {
 				return \OC\Files\Stream\Quota::wrap($source, $free);
