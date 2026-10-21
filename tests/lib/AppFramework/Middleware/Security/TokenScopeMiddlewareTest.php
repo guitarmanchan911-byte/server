@@ -16,7 +16,13 @@ use OC\AppFramework\Middleware\Security\TokenScopeMiddleware;
 use OC\AppFramework\Utility\ControllerMethodReflector;
 use OC\Authentication\Token\PublicKeyToken;
 use OC\Authentication\Token\TokenScopes;
+use OC\Core\Controller\AutoCompleteController;
+use OC\Core\Controller\ContactsMenuController;
+use OC\Core\Controller\HoverCardController;
 use OC\Core\Controller\PreviewController;
+use OC\Core\Controller\ProfileApiController;
+use OC\Core\Controller\UnifiedSearchController;
+use OC\Core\TokenScopes as CoreTokenScopes;
 use OC\Lockdown\LockdownManager;
 use OCA\DAV\Controller\DirectController;
 use OCA\DAV\TokenScopes as DavTokenScopes;
@@ -162,7 +168,18 @@ class TokenScopeMiddlewareTest extends TestCase {
 		];
 	}
 
+	public static function sharedServices(): array {
+		return [
+			'unified search' => [UnifiedSearchController::class, 'search', CoreTokenScopes::SEARCH_READ],
+			'autocomplete' => [AutoCompleteController::class, 'get', CoreTokenScopes::PEOPLE_READ],
+			'contacts menu' => [ContactsMenuController::class, 'index', CoreTokenScopes::PEOPLE_READ],
+			'hovercard' => [HoverCardController::class, 'getUser', CoreTokenScopes::PEOPLE_READ],
+			'profile fields' => [ProfileApiController::class, 'getProfileFields', CoreTokenScopes::PEOPLE_READ],
+		];
+	}
+
 	#[DataProvider('pinnedScopes')]
+	#[DataProvider('sharedServices')]
 	public function testPinnedScopes(string $class, string $method, string $scope): void {
 		$attribute = (new \ReflectionMethod($class, $method))->getAttributes(TokenScope::class)[0]
 			?? (new \ReflectionClass($class))->getAttributes(TokenScope::class)[0];
